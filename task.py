@@ -75,42 +75,21 @@ class TakeOff():
         # Goal
         self.target_pos = target_pos if target_pos is not None else np.array([0., 0., 10.])
 
-
+    
     def get_reward(self):
         """Uses current pose of sim to return reward."""
-        pos = abs(self.sim.pose[:3] - self.target_pos)
-        penality_xy = pos[:2].sum()/10  # xy位置偏移
-
-        # reward = zero for matching target z. Farther you go, the larger the negative reward gets, up to -2,
-        reward = -min(abs(self.sim.pose[2] - self.target_pos[2]), 20.0)/10.0 
-        reward -= penality_xy
-        # reward the vertical velocity so agent will be rewarded to fly vertical upwards
-        reward += min(self.sim.v[2], 500.0)/100.0
-        reward -= (abs(self.sim.angular_v[:3])).sum()/100.0
-        
-        # agent has crossed the target height
-        if self.sim.pose[2] >= self.target_pos[2]:
-            reward += 10.0  # bonus reward
-        
-        if self.sim.pose[2] <= 0 and self.sim.time < self.sim.runtime: 
-            reward -= 1
-        return reward
-    
-    def get_reward1(self):
-        """Uses current pose of sim to return reward."""        
         reward = - min(abs(self.target_pos[2] - self.sim.pose[2]), 20.0)/10.0 
-        
         reward += min(self.sim.v[2], 500.0)/100.0
-        reward -= (abs(self.sim.angular_v[:3])).sum()/100.0
+        reward -= (abs(self.sim.angular_v[:3])).sum()/10.0
+        reward -= (abs(self.sim.pose[:2] - self.target_pos[:2])).sum()/5.0
         
         if self.sim.pose[2] >= self.target_pos[2]:
-            reward += 10.0  # bonus reward
-
-        if self.sim.pose[2] <= 0 and self.sim.time < self.sim.runtime: 
-            reward -= 1
+            reward += 10.0  # bonus 
+        elif self.sim.pose[2] <= 0 and self.sim.time < self.sim.runtime: 
+            reward -= 10
         return reward
-   
 
+    
     def step(self, rotor_speeds):
         """Uses action to obtain next state, reward, done."""
         reward = 0

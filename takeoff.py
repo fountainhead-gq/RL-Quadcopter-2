@@ -1,5 +1,6 @@
 import numpy as np
 from physics_sim import PhysicsSim
+import math
 
 class Task():
     """Task (environment) that defines the goal and provides feedback to the agent."""
@@ -26,11 +27,29 @@ class Task():
         # Goal
         self.target_pos = target_pos if target_pos is not None else np.array([0., 0., 10.]) 
 
+#     def get_reward1(self):
+#         """Uses current pose of sim to return reward."""
+#         reward = min(abs(self.sim.pose[2]-self.target_pos[2]),10.0)
+#         reward += self.sim.v[2]
+#         reward -= (abs(self.sim.pose[:2] - self.target_pos[:2])).sum()/5.0
+ 
+#         if self.sim.pose[2] >= self.target_pos[2]:
+#             reward += 20.0  
+#         elif self.sim.pose[2] <= 0 and self.sim.time < self.sim.runtime: 
+#             reward -= 10
+            
+#         #distance = abs(self.sim.pose[:3]- self.target_pos).sum()
+#         #reward = np.exp(-0.0001*distance)            
+#         return reward
+    
+
     def get_reward(self):
         """Uses current pose of sim to return reward."""
-        reward = 1.-.3*(abs(self.sim.pose[:3] - self.target_pos)).sum()
+        reward_z = np.tanh(1 - 0.003*(abs(self.sim.pose[2] - self.target_pos[2]))).sum()
+        reward_xy = np.tanh(1 - 0.009*(abs(self.sim.pose[:2] - self.target_pos[:2]))).sum()
+        reward = reward_z + reward_xy
         return reward
-
+    
     def step(self, rotor_speeds):
         """Uses action to obtain next state, reward, done."""
         reward = 0
